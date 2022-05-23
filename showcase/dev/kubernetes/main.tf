@@ -46,7 +46,7 @@ module "argocd" {
   argocd_project_name              = "infrastructure-charts"
   argocd_git_access_token_username = "ARGO_CD_WITH_DEPLOYMENT"
   argocd_git_access_token          = var.argocd_git_access_token
-  argocd_project_source_repo_url   = "https://github.com/iits-consulting/otc-infrastructure-charts-template.git"
+  argocd_project_source_repo_url   = "https://github.com/victorgetz/otc-infrastructure-charts-template"
   argocd_project_source_path       = "stages/${var.stage}/infrastructure-charts"
   argocd_application_values = {
     global = {

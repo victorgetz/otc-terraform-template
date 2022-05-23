@@ -1,14 +1,5 @@
 data "opentelekomcloud_identity_project_v3" "current" {}
 
-# Only one Cloud Tracing Service can be used inside a otc tenant
-module "cloud_tracing_service" {
-  providers    = { opentelekomcloud = opentelekomcloud.top_level_project }
-  source       = "iits-consulting/project-factory/opentelekomcloud//modules/cloud_tracing_service"
-  version      = "4.0.1"
-  bucket_name  = replace(lower("${data.opentelekomcloud_identity_project_v3.current.name}-${var.context}-${var.stage}-cts"), "_", "-")
-  project_name = data.opentelekomcloud_identity_project_v3.current.name
-}
-
 module "vpc" {
   source     = "iits-consulting/project-factory/opentelekomcloud//modules/vpc"
   version    = "4.0.1"
@@ -63,6 +54,16 @@ module "private_dns" {
   }
   vpc_id = module.vpc.vpc.id
 }
+
+resource "opentelekomcloud_dns_recordset_v2" "dns_entry_openinfra" {
+  zone_id     = "ff80808275f5fc0f017868e827db3755"
+  name        = "admin.${var.context}-${var.stage}.guardians-of-the-otc.com."
+  description = "Recordset for OpenInfra Berlin"
+  ttl         = 300
+  type        = "A"
+  records     = [module.loadbalancer.elb_public_ip]
+}
+
 
 module "encyrpted_secrets_bucket" {
   providers         = { opentelekomcloud = opentelekomcloud.top_level_project }
