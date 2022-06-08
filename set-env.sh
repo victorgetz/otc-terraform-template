@@ -10,10 +10,10 @@ export TF_VAR_region="eu-de"
 
 ##### PROJECT CONFIGURATION #####
 #Current Context you are working on can be customer name or cloud name etc.
-export TF_VAR_context="beri"
+export TF_VAR_context="openinfra"
 # Current Stage you are working on for example dev,qa, prod etc.
 export TF_VAR_stage="dev"
-export OS_PROJECT_NAME="eu-de_showcase"
+export OS_PROJECT_NAME="eu-de_openinfra"
 
 # ArgoCD/K8s config
 export TF_VAR_registry_credentials_dockerconfig_username=$(vault kv get --field DOCKERCONFIG_USERNAME secret/otc_credentials/openinfra)
