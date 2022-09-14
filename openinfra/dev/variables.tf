@@ -3,11 +3,6 @@ variable "region" {
   description = "OTC region for the project: eu-de(default) or eu-nl"
 }
 
-variable "availability_zones" {
-  type        = list(string)
-  description = "Availability zones for the OTC resources."
-}
-
 variable "vpc_cidr" {
   type        = string
   description = "IP range of the VPC"

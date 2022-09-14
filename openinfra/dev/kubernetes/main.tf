@@ -32,12 +32,14 @@ locals {
 
 module "argocd" {
   source  = "iits-consulting/bootstrap/argocd"
-  version = "1.0.1"
+  version    = "5.3.5"
 
   ## Common CRD collection Configuration, see https://github.com/iits-consulting/crds-chart
   custom_resource_definitions_enabled = true
+  custom_resource_definitions_version = "1.4.1"
 
-  ### Registry Credentials Configuration for auto inject docker pull secrets, see https://github.com/iits-consulting/registry-creds-chart
+
+    ### Registry Credentials Configuration for auto inject docker pull secrets, see https://github.com/iits-consulting/registry-creds-chart
   registry_credentials_enabled      = true
   registry_credentials_dockerconfig = local.dockerconfigjsonbase64
 

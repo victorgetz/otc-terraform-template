@@ -2,7 +2,7 @@ data "opentelekomcloud_identity_project_v3" "current" {}
 
 module "vpc" {
   source     = "iits-consulting/project-factory/opentelekomcloud//modules/vpc"
-  version    = "4.1.2"
+  version    = "4.2.2"
   name       = "${var.context}-${var.stage}-vpc"
   tags       = local.tags
   cidr_block = var.vpc_cidr
@@ -13,23 +13,25 @@ module "vpc" {
 
 module "cce" {
   source  = "iits-consulting/project-factory/opentelekomcloud//modules/cce"
-  version = "4.1.2"
+  version = "4.2.2"
   name    = "${var.context}-${var.stage}"
 
   cluster_config = {
     vpc_id            = module.vpc.vpc.id
-    subnet_id         = values(module.vpc.subnets)[0].id
+    subnet_id         = module.vpc.subnets["${var.context}-${var.stage}-subnet"].id
     cluster_version   = "v1.21"
     high_availability = var.cluster_config.high_availability
     enable_scaling    = var.cluster_config.enable_scaling
   }
   node_config = {
-    availability_zones = var.availability_zones
+    availability_zones = [
+      "${var.region}-03",
+      "${var.region}-01"
+    ]
     node_count         = var.cluster_config.nodes_count
     node_flavor        = var.cluster_config.node_flavor
     node_storage_type  = var.cluster_config.node_storage_type
     node_storage_size  = var.cluster_config.node_storage_size
-    node_storage_encryption_enabled = false
   }
   autoscaling_config = {
     nodes_max = var.cluster_config.nodes_max
@@ -39,7 +41,7 @@ module "cce" {
 
 module "loadbalancer" {
   source       = "iits-consulting/project-factory/opentelekomcloud//modules/loadbalancer"
-  version      = "4.1.2"
+  version      = "4.2.2"
   context_name = var.context
   subnet_id    = module.vpc.subnets["${var.context}-${var.stage}-subnet"].subnet_id
   stage_name   = var.stage
@@ -48,10 +50,10 @@ module "loadbalancer" {
 
 module "private_dns" {
   source  = "iits-consulting/project-factory/opentelekomcloud//modules/private_dns"
-  version = "4.1.2"
+  version = "4.2.2"
   domain  = "internal.${var.context}.de"
   a_records = {
-    example = ["192.168.0.0"]
+    elb_private_ip = [module.loadbalancer.elb_private_ip]
   }
   vpc_id = module.vpc.vpc.id
 }
@@ -59,7 +61,7 @@ module "private_dns" {
 resource "opentelekomcloud_dns_recordset_v2" "dns_entry_openinfra" {
   zone_id     = "ff80808275f5fc0f017868e827db3755"
   name        = "admin.${var.context}-${var.stage}.guardians-of-the-otc.com."
-  description = "Recordset for OpenInfra Berlin"
+  description = "Recordset for Demo"
   ttl         = 300
   type        = "A"
   records     = [module.loadbalancer.elb_public_ip]
@@ -69,7 +71,7 @@ resource "opentelekomcloud_dns_recordset_v2" "dns_entry_openinfra" {
 module "encyrpted_secrets_bucket" {
   providers         = { opentelekomcloud = opentelekomcloud.top_level_project }
   source            = "iits-consulting/project-factory/opentelekomcloud//modules/obs_secrets_writer"
-  version           = "4.1.2"
+  version           = "4.2.2"
   bucket_name       = replace(lower("${data.opentelekomcloud_identity_project_v3.current.name}-${var.context}-${var.stage}-stage-secrets"), "_", "-")
   bucket_object_key = "terraform-secrets"
   secrets = {
