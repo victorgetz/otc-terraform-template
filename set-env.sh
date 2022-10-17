@@ -1,24 +1,28 @@
 # Either your ACCESS_KEY and SECRET_KEY or from a serviceaccount
 
 #### OTC CREDENTIALS #####
-export OS_DOMAIN_NAME=$(vault kv get --field OS_DOMAIN_NAME secret/otc_credentials/ocre)
-export OS_ACCESS_KEY=$(vault kv get --field OS_ACCESS_KEY secret/otc_credentials/ocre)
-export OS_SECRET_KEY=$(vault kv get --field OS_SECRET_KEY secret/otc_credentials/ocre)
+export OS_DOMAIN_NAME="REPLACE_ME"
+export OS_ACCESS_KEY="REPLACE_ME"
+export OS_SECRET_KEY="REPLACE_ME"
 export AWS_ACCESS_KEY_ID=$OS_ACCESS_KEY
 export AWS_SECRET_ACCESS_KEY=$OS_SECRET_KEY
 export TF_VAR_region="eu-de"
 
 ##### PROJECT CONFIGURATION #####
 #Current Context you are working on can be customer name or cloud name etc.
-export TF_VAR_context="ocre"
+export TF_VAR_context="showcase"
 # Current Stage you are working on for example dev,qa, prod etc.
 export TF_VAR_stage="dev"
-export OS_PROJECT_NAME="eu-de_ocre"
+export OS_PROJECT_NAME="eu-de"
 
 # ArgoCD/K8s config
-export TF_VAR_registry_credentials_dockerconfig_username=$(vault kv get --field DOCKERCONFIG_USERNAME secret/otc_credentials/ocre)
-export TF_VAR_registry_credentials_dockerconfig_password=$(vault kv get --field DOCKERCONFIG_PASSWORD secret/otc_credentials/ocre)
-export TF_VAR_argocd_git_access_token=$(vault kv get --field ARGOCD_GIT_ACCESS_TOKEN secret/otc_credentials/ocre)
+export TF_VAR_registry_credentials_dockerconfig_username="REPLACE_ME"
+export TF_VAR_registry_credentials_dockerconfig_password="REPLACE_ME"
+export TF_VAR_argocd_git_access_token="REPLACE_ME"
+
+# DNS Config
+export TF_VAR_domain_name="REPLACE_ME" # example: my-domain.de
+export TF_VAR_email="REPLACE_ME" # example: mymail@mail.de
 
 #### TERRAFORM LOCAL PLUGIN CACHING #####
 mkdir -p ${HOME}/Terraform/plugins

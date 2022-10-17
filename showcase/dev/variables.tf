@@ -30,6 +30,18 @@ variable "stage" {
   type        = string
   description = "Project stage for resource naming and tagging."
 }
+
+variable "domain_name" {
+  type        = string
+  description = "The public domain to create public DNS zone for."
+}
+
+variable "email" {
+  description = "E mail contact address for DNS zone."
+  type        = string
+}
+
+
 locals {
   prefix = replace(join("-", [lower(var.context), lower(var.stage)]), "_", "-")
   tags = {

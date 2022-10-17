@@ -35,3 +35,8 @@ variable "argocd_git_access_token" {
   description = "Git Access Token for ArgoCD"
   sensitive   = true
 }
+
+variable "domain_name" {
+  type        = string
+  description = "The public domain to create public DNS zone for."
+}

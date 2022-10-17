@@ -1,8 +1,8 @@
 data "opentelekomcloud_identity_project_v3" "current" {}
 
 module "terraform_secrets_from_encrypted_s3_bucket" {
-  source            = "iits-consulting/project-factory/opentelekomcloud//modules/obs_secrets_reader"
-  version           = "4.0.1"
+  source            = "registry.terraform.io/iits-consulting/project-factory/opentelekomcloud//modules/obs_secrets_reader"
+  version           = "4.2.2"
   bucket_name       = replace(lower("${data.opentelekomcloud_identity_project_v3.current.name}-${var.context}-${var.stage}-stage-secrets"), "_", "-")
   bucket_object_key = "terraform-secrets"
   required_secrets = [
@@ -31,28 +31,33 @@ locals {
 }
 
 module "argocd" {
-  source  = "iits-consulting/bootstrap/argocd"
-  version    = "5.3.5"
+  source  = "registry.terraform.io/iits-consulting/bootstrap/argocd"
+  version = "5.4.1"
 
   ## Common CRD collection Configuration, see https://github.com/iits-consulting/crds-chart
   custom_resource_definitions_enabled = true
-  custom_resource_definitions_version = "1.4.1"
 
 
-    ### Registry Credentials Configuration for auto inject docker pull secrets, see https://github.com/iits-consulting/registry-creds-chart
+  ### Registry Credentials Configuration for auto inject docker pull secrets, see https://github.com/iits-consulting/registry-creds-chart
   registry_credentials_enabled      = true
   registry_credentials_dockerconfig = local.dockerconfigjsonbase64
 
   ### ArgoCD Configuration
   argocd_namespace                 = "argocd"
   argocd_project_name              = "infrastructure-charts"
-  argocd_git_access_token_username = "ARGO_CD_WITH_DEPLOYMENT"
+  argocd_git_access_token_username = "attic"
   argocd_git_access_token          = var.argocd_git_access_token
   argocd_project_source_repo_url   = "https://github.com/victorgetz/otc-infrastructure-charts-template"
   argocd_project_source_path       = "stages/${var.stage}/infrastructure-charts"
   argocd_application_values = {
     global = {
       stage = var.stage
+      helmValues = [
+        {
+          name = "dns.host"
+          value = "admin.${var.domain_name}"
+        }
+      ]
     }
     traefik = {
       terraformValues = [

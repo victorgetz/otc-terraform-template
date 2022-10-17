@@ -1,7 +1,7 @@
 data "opentelekomcloud_identity_project_v3" "current" {}
 
 module "vpc" {
-  source     = "iits-consulting/project-factory/opentelekomcloud//modules/vpc"
+  source     = "registry.terraform.io/iits-consulting/project-factory/opentelekomcloud//modules/vpc"
   version    = "4.2.2"
   name       = "${var.context}-${var.stage}-vpc"
   tags       = local.tags
@@ -12,7 +12,7 @@ module "vpc" {
 }
 
 module "cce" {
-  source  = "iits-consulting/project-factory/opentelekomcloud//modules/cce"
+  source  = "registry.terraform.io/iits-consulting/project-factory/opentelekomcloud//modules/cce"
   version = "4.2.2"
   name    = "${var.context}-${var.stage}"
 
@@ -28,10 +28,10 @@ module "cce" {
       "${var.region}-03",
       "${var.region}-01"
     ]
-    node_count         = var.cluster_config.nodes_count
-    node_flavor        = var.cluster_config.node_flavor
-    node_storage_type  = var.cluster_config.node_storage_type
-    node_storage_size  = var.cluster_config.node_storage_size
+    node_count        = var.cluster_config.nodes_count
+    node_flavor       = var.cluster_config.node_flavor
+    node_storage_type = var.cluster_config.node_storage_type
+    node_storage_size = var.cluster_config.node_storage_size
   }
   autoscaling_config = {
     nodes_max = var.cluster_config.nodes_max
@@ -40,7 +40,7 @@ module "cce" {
 }
 
 module "loadbalancer" {
-  source       = "iits-consulting/project-factory/opentelekomcloud//modules/loadbalancer"
+  source       = "registry.terraform.io/iits-consulting/project-factory/opentelekomcloud//modules/loadbalancer"
   version      = "4.2.2"
   context_name = var.context
   subnet_id    = module.vpc.subnets["${var.context}-${var.stage}-subnet"].subnet_id
@@ -49,7 +49,7 @@ module "loadbalancer" {
 }
 
 module "private_dns" {
-  source  = "iits-consulting/project-factory/opentelekomcloud//modules/private_dns"
+  source  = "registry.terraform.io/iits-consulting/project-factory/opentelekomcloud//modules/private_dns"
   version = "4.2.2"
   domain  = "internal.${var.context}.de"
   a_records = {
@@ -58,19 +58,28 @@ module "private_dns" {
   vpc_id = module.vpc.vpc.id
 }
 
-resource "opentelekomcloud_dns_recordset_v2" "dns_entry_openinfra" {
-  zone_id     = "ff80808275f5fc0f017868e827db3755"
-  name        = "admin.${var.context}-${var.stage}.guardians-of-the-otc.com."
-  description = "Recordset for Demo"
-  ttl         = 300
-  type        = "A"
-  records     = [module.loadbalancer.elb_public_ip]
+
+/*
+Requires this two ns records in your domain provider config (config depends on domain provider)
+
+ns1.open-telekom-cloud.com
+ns2.open-telekom-cloud.com
+
+*/
+module "public_dns" {
+  source  = "registry.terraform.io/iits-consulting/project-factory/opentelekomcloud//modules/public_dns"
+  version = "4.2.2"
+  domain  = var.domain_name
+  email   = var.email
+  a_records = {
+    admin = [module.loadbalancer.elb_public_ip]
+  }
 }
 
 
 module "encyrpted_secrets_bucket" {
   providers         = { opentelekomcloud = opentelekomcloud.top_level_project }
-  source            = "iits-consulting/project-factory/opentelekomcloud//modules/obs_secrets_writer"
+  source            = "registry.terraform.io/iits-consulting/project-factory/opentelekomcloud//modules/obs_secrets_writer"
   version           = "4.2.2"
   bucket_name       = replace(lower("${data.opentelekomcloud_identity_project_v3.current.name}-${var.context}-${var.stage}-stage-secrets"), "_", "-")
   bucket_object_key = "terraform-secrets"
