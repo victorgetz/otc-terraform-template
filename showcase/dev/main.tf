@@ -4,11 +4,22 @@ module "vpc" {
   source     = "registry.terraform.io/iits-consulting/project-factory/opentelekomcloud//modules/vpc"
   version    = "4.2.2"
   name       = "${var.context}-${var.stage}-vpc"
-  tags       = local.tags
   cidr_block = var.vpc_cidr
   subnets = {
-    "${var.context}-${var.stage}-subnet" = cidrsubnet(var.vpc_cidr, 1, 0)
+    "kubernetes-subnet" = cidrsubnet(var.vpc_cidr, 1, 0)
   }
+  tags = local.tags
+}
+
+module "snat" {
+  // This module is necessary for internet access if the VPC is not in eu-de region.
+  count         = var.region == "eu-de" ? 0 : 1
+  source        = "registry.terraform.io/iits-consulting/project-factory/opentelekomcloud//modules/snat"
+  version       = "4.2.2"
+  name_prefix   = "${var.context}-${var.stage}"
+  subnet_id   = module.vpc.subnets["kubernetes-subnet"].id
+  vpc_id        = module.vpc.vpc.id
+  tags          = local.tags
 }
 
 module "cce" {
@@ -18,7 +29,7 @@ module "cce" {
 
   cluster_config = {
     vpc_id            = module.vpc.vpc.id
-    subnet_id         = module.vpc.subnets["${var.context}-${var.stage}-subnet"].id
+    subnet_id         = module.vpc.subnets["kubernetes-subnet"].id
     cluster_version   = "v1.21"
     high_availability = var.cluster_config.high_availability
     enable_scaling    = var.cluster_config.enable_scaling
@@ -43,7 +54,7 @@ module "loadbalancer" {
   source       = "registry.terraform.io/iits-consulting/project-factory/opentelekomcloud//modules/loadbalancer"
   version      = "4.2.2"
   context_name = var.context
-  subnet_id    = module.vpc.subnets["${var.context}-${var.stage}-subnet"].subnet_id
+  subnet_id    = module.vpc.subnets["kubernetes-subnet"].subnet_id
   stage_name   = var.stage
   bandwidth    = 500
 }
@@ -91,7 +102,8 @@ module "encyrpted_secrets_bucket" {
     client_certificate_data = module.cce.cluster_credentials.client_certificate_data
     kube_api_endpoint       = module.cce.cluster_credentials.kubectl_external_server
     client_key_data         = module.cce.cluster_credentials.client_key_data
-    cce_id                  = module.cce.cluster_name
-    cce_name                = module.cce.cluster_id
+    cce_id                  = module.cce.cluster_id
+    cce_name                = module.cce.cluster_name
   }
+  tags = local.tags
 }

@@ -19,15 +19,27 @@ module "terraform_secrets_from_encrypted_s3_bucket" {
 }
 
 locals {
-  dockerconfigjsonbase64 = base64encode(jsonencode({
+  dockerhubconfigjsonbase64 = base64encode(jsonencode({
     auths = {
       "https://index.docker.io/v1/" = {
-        username = var.registry_credentials_dockerconfig_username
-        password = var.registry_credentials_dockerconfig_password
-        auth     = base64encode("${var.registry_credentials_dockerconfig_username}:${var.registry_credentials_dockerconfig_password}")
+        username = var.dockerhub_username
+        password = var.dockerhub_password
+        auth     = base64encode("${var.dockerhub_username}:${var.dockerhub_password}")
       }
     }
   }))
+}
+
+resource "kubernetes_namespace" "argocd" {
+  metadata {
+    annotations = {
+      optimized-by-cce = true
+    }
+    name = "argocd"
+    labels = {
+      name = "argocd"
+    }
+  }
 }
 
 module "argocd" {
@@ -40,15 +52,15 @@ module "argocd" {
 
   ### Registry Credentials Configuration for auto inject docker pull secrets, see https://github.com/iits-consulting/registry-creds-chart
   registry_credentials_enabled      = true
-  registry_credentials_dockerconfig = local.dockerconfigjsonbase64
+  registry_credentials_dockerconfig = local.dockerhubconfigjsonbase64
 
   ### ArgoCD Configuration
   argocd_namespace                 = "argocd"
   argocd_project_name              = "infrastructure-charts"
-  argocd_git_access_token_username = "attic"
-  argocd_git_access_token          = var.argocd_git_access_token
+  argocd_git_access_token_username = "argo"
+  argocd_git_access_token          = var.git_token
   argocd_project_source_repo_url   = "https://github.com/victorgetz/otc-infrastructure-charts-template"
-  argocd_project_source_path       = "stages/${var.stage}/infrastructure-charts"
+  argocd_project_source_path       = "stages/${var.stage}"
   argocd_application_values = {
     global = {
       stage = var.stage
