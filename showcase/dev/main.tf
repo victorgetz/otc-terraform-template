@@ -83,6 +83,7 @@ module "public_dns" {
   domain  = var.domain_name
   email   = var.email
   a_records = {
+    # admin.attic.iits.tech
     admin = [module.loadbalancer.elb_public_ip]
   }
 }
