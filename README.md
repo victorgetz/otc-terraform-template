@@ -7,6 +7,7 @@
 ## Deploy Infrastructure
 - Adjust set-env.sh
     - ACCESS_KEY and SECRET_KEY you get from the OTC UI
+    - If you are working on "eu-nl" please change TF_VAR_region to "eu-nl"
     - Adjust other REPLACE_ME Placeholder values with correct values
 - Source set-env.sh
 - Go to terraform-remote-state-bucket-creation and execute terraform init and apply

@@ -2,7 +2,7 @@ data "opentelekomcloud_identity_project_v3" "current" {}
 
 module "terraform_secrets_from_encrypted_s3_bucket" {
   source            = "registry.terraform.io/iits-consulting/project-factory/opentelekomcloud//modules/obs_secrets_reader"
-  version           = "4.2.2"
+  version           = "5.0.0"
   bucket_name       = replace(lower("${data.opentelekomcloud_identity_project_v3.current.name}-${var.context}-${var.stage}-stage-secrets"), "_", "-")
   bucket_object_key = "terraform-secrets"
   required_secrets = [
@@ -44,7 +44,7 @@ resource "kubernetes_namespace" "argocd" {
 
 module "argocd" {
   source  = "registry.terraform.io/iits-consulting/bootstrap/argocd"
-  version = "5.4.1"
+  version = "5.5.2"
 
   ## Common CRD collection Configuration, see https://github.com/iits-consulting/crds-chart
   custom_resource_definitions_enabled = true
